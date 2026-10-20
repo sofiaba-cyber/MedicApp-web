@@ -1,3 +1,12 @@
+/*
+ * MediApp - Proyecto web
+ *
+ * Framework seleccionado: Java Web con Maven y Apache Tomcat.
+ * Se seleccionó esta tecnología porque MediApp es una aplicación web
+ * que permite gestionar medicamentos y consultar información desde
+ * un navegador. Maven facilita la administración de dependencias
+ * y Apache Tomcat permite ejecutar los Servlets y las páginas JSP.
+ */
 package com.medicapp.servlet;
 
 import com.medicapp.conexion.ConexionBD;
@@ -10,7 +19,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -19,57 +27,82 @@ import java.util.ArrayList;
 import java.util.List;
 
 @WebServlet("/medicamentos")
+/**
+ * Controlador principal para gestionar el registro y consulta de medicamentos
+ * en MediApp.
+ *
+ * Recibe las solicitudes del usuario, procesa los datos, se comunica con la
+ * base de datos y envía la información a las páginas JSP correspondientes.
+ */
 public class MedicamentoServlet extends HttpServlet {
 
+    /**
+     * Consulta los medicamentos registrados en la base de datos y envía la
+     * información a la página lista.jsp.
+     *
+     * @param request solicitud enviada por el usuario.
+     * @param response respuesta enviada al navegador.
+     * @throws ServletException si ocurre un error en el Servlet.
+     * @throws IOException si ocurre un error de entrada o salida.
+     */
     @Override
-protected void doGet(HttpServletRequest request, HttpServletResponse response)
-        throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
-    String sql = "SELECT idMEDICAMENTO, Nombre, descripcion, precio, stock, "
-            + "CATEGORIA_idCATEGORIA FROM MEDICAMENTO";
+        String sql = "SELECT idMEDICAMENTO, Nombre, descripcion, precio, stock, "
+                + "CATEGORIA_idCATEGORIA FROM MEDICAMENTO";
 
-    List<Medicamento> medicamentos = new ArrayList<>();
+        List<Medicamento> medicamentos = new ArrayList<>();
 
-    try {
+        try {
 
-        Connection conexion = ConexionBD.conectar();
+            Connection conexion = ConexionBD.conectar();
 
-        PreparedStatement statement = conexion.prepareStatement(sql);
+            PreparedStatement statement = conexion.prepareStatement(sql);
 
-        ResultSet resultado = statement.executeQuery();
+            ResultSet resultado = statement.executeQuery();
 
-        while (resultado.next()) {
+            while (resultado.next()) {
 
-            Medicamento medicamento = new Medicamento(
-                    resultado.getInt("idMEDICAMENTO"),
-                    resultado.getString("Nombre"),
-                    resultado.getString("descripcion"),
-                    resultado.getDouble("precio"),
-                    resultado.getInt("stock"),
-                    resultado.getInt("CATEGORIA_idCATEGORIA")
-            );
+                Medicamento medicamento = new Medicamento(
+                        resultado.getInt("idMEDICAMENTO"),
+                        resultado.getString("Nombre"),
+                        resultado.getString("descripcion"),
+                        resultado.getDouble("precio"),
+                        resultado.getInt("stock"),
+                        resultado.getInt("CATEGORIA_idCATEGORIA")
+                );
 
-            medicamentos.add(medicamento);
+                medicamentos.add(medicamento);
+            }
+
+            resultado.close();
+            statement.close();
+            conexion.close();
+
+            request.setAttribute("medicamentos", medicamentos);
+
+            request.getRequestDispatcher("/jsp/lista.jsp")
+                    .forward(request, response);
+
+        } catch (SQLException e) {
+
+            request.setAttribute("error", e.getMessage());
+
+            request.getRequestDispatcher("/jsp/error.jsp")
+                    .forward(request, response);
         }
-
-        resultado.close();
-        statement.close();
-        conexion.close();
-
-        request.setAttribute("medicamentos", medicamentos);
-
-        request.getRequestDispatcher("/jsp/lista.jsp")
-                .forward(request, response);
-
-    } catch (SQLException e) {
-
-        request.setAttribute("error", e.getMessage());
-
-        request.getRequestDispatcher("/jsp/error.jsp")
-                .forward(request, response);
     }
-}
 
+    /**
+     * Recibe los datos del formulario, registra el medicamento en la base de
+     * datos y muestra la página de confirmación.
+     *
+     * @param request datos enviados desde el formulario.
+     * @param response respuesta enviada al navegador.
+     * @throws ServletException si ocurre un error en el Servlet.
+     * @throws IOException si ocurre un error de entrada o salida.
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -87,7 +120,6 @@ protected void doGet(HttpServletRequest request, HttpServletResponse response)
 
         response.setContentType("text/html;charset=UTF-8");
 
-        PrintWriter out = response.getWriter();
 
         try {
 
@@ -107,24 +139,24 @@ protected void doGet(HttpServletRequest request, HttpServletResponse response)
             conexion.close();
 
             // Enviar los datos al JSP de confirmación
-request.setAttribute("nombre", nombre);
-request.setAttribute("descripcion", descripcion);
-request.setAttribute("precio", precio);
-request.setAttribute("stock", stock);
-request.setAttribute("categoria", categoria);
+            request.setAttribute("nombre", nombre);
+            request.setAttribute("descripcion", descripcion);
+            request.setAttribute("precio", precio);
+            request.setAttribute("stock", stock);
+            request.setAttribute("categoria", categoria);
 
 // Mostrar la página JSP
-request.getRequestDispatcher("/jsp/confirmacion.jsp")
-        .forward(request, response);
+            request.getRequestDispatcher("/jsp/confirmacion.jsp")
+                    .forward(request, response);
 
         } catch (SQLException | NumberFormatException e) {
 
-    // Enviar el mensaje de error al JSP
-    request.setAttribute("error", e.getMessage());
+            // Enviar el mensaje de error al JSP
+            request.setAttribute("error", e.getMessage());
 
-    // Mostrar la página de error
-    request.getRequestDispatcher("/jsp/error.jsp")
-            .forward(request, response);
-}
+            // Mostrar la página de error
+            request.getRequestDispatcher("/jsp/error.jsp")
+                    .forward(request, response);
+        }
     }
 }
