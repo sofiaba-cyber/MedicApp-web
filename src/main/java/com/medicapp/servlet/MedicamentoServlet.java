@@ -49,6 +49,98 @@ public class MedicamentoServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
+        String accion = request.getParameter("accion");
+
+        if ("eliminar".equals(accion)) {
+
+    String id = request.getParameter("id");
+
+    String sqlEliminar =
+            "DELETE FROM MEDICAMENTO WHERE idMEDICAMENTO = ?";
+
+    try {
+
+        Connection conexion = ConexionBD.conectar();
+
+        PreparedStatement statement =
+                conexion.prepareStatement(sqlEliminar);
+
+        statement.setInt(1, Integer.parseInt(id));
+
+        statement.executeUpdate();
+
+        statement.close();
+        conexion.close();
+
+        response.sendRedirect("medicamentos");
+
+        return;
+
+    } catch (SQLException | NumberFormatException e) {
+
+        request.setAttribute("error", e.getMessage());
+
+        request.getRequestDispatcher("/jsp/error.jsp")
+                .forward(request, response);
+
+        return;
+    }
+}
+if ("editar".equals(accion)) {
+
+    String id = request.getParameter("id");
+
+    String sqlEditar = "SELECT idMEDICAMENTO, Nombre, descripcion, precio, "
+            + "stock, CATEGORIA_idCATEGORIA "
+            + "FROM MEDICAMENTO WHERE idMEDICAMENTO = ?";
+
+    try {
+
+        Connection conexion = ConexionBD.conectar();
+
+        PreparedStatement statement = conexion.prepareStatement(sqlEditar);
+
+        statement.setInt(1, Integer.parseInt(id));
+
+        ResultSet resultado = statement.executeQuery();
+
+        if (resultado.next()) {
+
+            Medicamento medicamento = new Medicamento(
+                    resultado.getInt("idMEDICAMENTO"),
+                    resultado.getString("Nombre"),
+                    resultado.getString("descripcion"),
+                    resultado.getDouble("precio"),
+                    resultado.getInt("stock"),
+                    resultado.getInt("CATEGORIA_idCATEGORIA")
+            );
+
+            request.setAttribute("medicamento", medicamento);
+
+            resultado.close();
+            statement.close();
+            conexion.close();
+
+            request.getRequestDispatcher("/jsp/editar-medicamento.jsp")
+                    .forward(request, response);
+
+            return;
+        }
+
+        resultado.close();
+        statement.close();
+        conexion.close();
+
+    } catch (SQLException | NumberFormatException e) {
+
+        request.setAttribute("error", e.getMessage());
+
+        request.getRequestDispatcher("/jsp/error.jsp")
+                .forward(request, response);
+
+        return;
+    }
+}
         String sql = "SELECT idMEDICAMENTO, Nombre, descripcion, precio, stock, "
                 + "CATEGORIA_idCATEGORIA FROM MEDICAMENTO";
 
@@ -108,12 +200,131 @@ public class MedicamentoServlet extends HttpServlet {
             throws ServletException, IOException {
 
         // Recibir datos del formulario
+        String accion = request.getParameter("accion");
+
+if ("actualizar".equals(accion)) {
+
+    String id = request.getParameter("id");
+    String nombre = request.getParameter("nombre");
+    String descripcion = request.getParameter("descripcion");
+    String precio = request.getParameter("precio");
+    String stock = request.getParameter("stock");
+    String categoria = request.getParameter("categoria");
+    
+    // Validar que el precio sea mayor que cero.
+if (Double.parseDouble(precio) <= 0) {
+
+    request.setAttribute("error",
+            "El precio debe ser mayor que cero.");
+
+    request.getRequestDispatcher("/jsp/error.jsp")
+            .forward(request, response);
+
+    return;
+}
+
+// Validar que el stock no sea negativo.
+if (Integer.parseInt(stock) < 0) {
+
+    request.setAttribute("error",
+            "El stock no puede ser negativo.");
+
+    request.getRequestDispatcher("/jsp/error.jsp")
+            .forward(request, response);
+
+    return;
+}
+
+    String sqlActualizar = "UPDATE MEDICAMENTO SET "
+            + "Nombre = ?, descripcion = ?, precio = ?, stock = ?, "
+            + "CATEGORIA_idCATEGORIA = ? "
+            + "WHERE idMEDICAMENTO = ?";
+
+    try {
+
+        Connection conexion = ConexionBD.conectar();
+
+        PreparedStatement statement =
+                conexion.prepareStatement(sqlActualizar);
+
+        statement.setString(1, nombre);
+        statement.setString(2, descripcion);
+        statement.setDouble(3, Double.parseDouble(precio));
+        statement.setInt(4, Integer.parseInt(stock));
+        statement.setInt(5, Integer.parseInt(categoria));
+        statement.setInt(6, Integer.parseInt(id));
+
+        statement.executeUpdate();
+
+        statement.close();
+        conexion.close();
+
+        response.sendRedirect("medicamentos");
+
+        return;
+
+    } catch (SQLException | NumberFormatException e) {
+
+        request.setAttribute("error", e.getMessage());
+
+        request.getRequestDispatcher("/jsp/error.jsp")
+                .forward(request, response);
+
+        return;
+    }
+}
         String nombre = request.getParameter("nombre");
         String descripcion = request.getParameter("descripcion");
         String precio = request.getParameter("precio");
         String stock = request.getParameter("stock");
         String categoria = request.getParameter("categoria");
+        
+        // Validar la longitud máxima del nombre.
+if (nombre.length() > 100) {
 
+    request.setAttribute("error",
+            "El nombre del medicamento no puede superar los 100 caracteres.");
+
+    request.getRequestDispatcher("/jsp/error.jsp")
+            .forward(request, response);
+
+    return;
+}
+
+// Validar la longitud máxima de la descripción.
+if (descripcion != null && descripcion.length() > 255) {
+
+    request.setAttribute("error",
+            "La descripción no puede superar los 255 caracteres.");
+
+    request.getRequestDispatcher("/jsp/error.jsp")
+            .forward(request, response);
+
+    return;
+}
+// Validar que el precio sea mayor que cero.
+if (Double.parseDouble(precio) <= 0) {
+
+    request.setAttribute("error",
+            "El precio debe ser mayor que cero.");
+
+    request.getRequestDispatcher("/jsp/error.jsp")
+            .forward(request, response);
+
+    return;
+}
+
+// Validar que el stock no sea negativo.
+if (Integer.parseInt(stock) < 0) {
+
+    request.setAttribute("error",
+            "El stock no puede ser negativo.");
+
+    request.getRequestDispatcher("/jsp/error.jsp")
+            .forward(request, response);
+
+    return;
+}
         String sql = "INSERT INTO MEDICAMENTO "
                 + "(Nombre, descripcion, precio, stock, CATEGORIA_idCATEGORIA) "
                 + "VALUES (?, ?, ?, ?, ?)";

@@ -23,6 +23,7 @@
             <th>Precio</th>
             <th>Stock</th>
             <th>Categoría</th>
+            <th>Acciones</th>
         </tr>
 
         <%
@@ -41,6 +42,17 @@
             <td>$<%= medicamento.getPrecio() %></td>
             <td><%= medicamento.getStock() %></td>
             <td><%= medicamento.getCATEGORIA_idCATEGORIA() %></td>
+            <td>
+    <a href="../medicamentos?accion=editar&id=<%= medicamento.getIdMEDICAMENTO() %>">
+        Editar
+    </a>
+        <br>
+
+<a href="${pageContext.request.contextPath}/medicamentos?accion=eliminar&id=<%= medicamento.getIdMEDICAMENTO() %>"
+   onclick="return confirm('¿Está seguro de eliminar este medicamento?');">
+    Eliminar
+</a>
+</td>
         </tr>
 
         <%
@@ -50,7 +62,7 @@
         %>
 
         <tr>
-            <td colspan="6">No hay medicamentos registrados.</td>
+            <td colspan="7">No hay medicamentos registrados.</td>
         </tr>
 
         <%
